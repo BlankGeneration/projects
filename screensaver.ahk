@@ -55,11 +55,13 @@ RunScreensaver() {
 }
 
 Shutdown(pid) {
-    ; Try graceful close first to preserve session data
     try WinClose "ahk_pid " pid
-    if ProcessWaitClose(pid, 3)
-        ExitApp
-    ; Force kill if it didn't close gracefully
-    ProcessClose pid
+    if !ProcessWaitClose(pid, 3)
+        ProcessClose pid
+    ; Force full screen repaint
+    hDesktop := DllCall("user32\GetDesktopWindow", "Ptr")
+    DllCall("user32\RedrawWindow", "Ptr", hDesktop, "Ptr", 0, "Ptr", 0, "UInt", 0x0085)
+    DllCall("user32\SystemParametersInfo", "UInt", 0x0014, "UInt", 0, "Ptr", 0, "UInt", 0x02)
+    Sleep 200
     ExitApp
 }
